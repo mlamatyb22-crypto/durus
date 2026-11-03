@@ -205,8 +205,8 @@ body.locked>*:not(#gate){visibility:hidden}
   <audio id="audio" preload="metadata"></audio>
 </footer>
 
-<script src="data.js?v=1793646329"></script>
-<script>window.R = {};</script><script src="review.js?v=1793646329"></script>
+<script src="data.js?v=1793667943"></script>
+<script>window.R = {};</script><script src="review.js?v=1793667943"></script>
 <script>
 const $ = s => document.querySelector(s);
 const AR = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
@@ -236,7 +236,7 @@ function renderLessons(){
     <div class="lesson ${l.n===cur?"cur":""} ${done.has(l.n)?"done":""}" data-n="${l.n}">
       <div class="num">${AR(l.n)}</div>
       <div class="meta"><div class="t">${lessonTitle(l)}</div>
-      <div class="s">ص ${AR(bookNo(l.from))}–${AR(bookNo(l.to))} · ${fmt(l.dur)}</div></div>
+      <div class="s">ص ${AR(bookNo(l.from))}–${AR(bookNo(l.to))} · ${l.missing ? "الصوت غير متوفر حالياً" : fmt(l.dur)}</div></div>
     </div>`).join("");
 }
 $("#lessons").onclick = e => { const el = e.target.closest(".lesson"); if (el) { loadLesson(+el.dataset.n, true); closeSide(); } };
@@ -307,8 +307,10 @@ function estimate(l, id){ // nearest timed line before this one in the same less
 }
 function loadLesson(n, autoplay){
   const l = LES.find(x => x.n === n); if (!l) return;
-  if (cur !== n || !audio.src) { cur = n; audio.src = `audio/${String(n).padStart(2,"0")}.m4a`; }
-  store.set("lesson", n); $("#aTitle").textContent = "الدرس " + AR(n);
+  if (l.missing) { cur = n; audio.pause(); audio.removeAttribute("src"); audio.load(); }
+  else if (cur !== n || !audio.src) { cur = n; audio.src = `audio/${String(n).padStart(2,"0")}.m4a`; }
+  store.set("lesson", n); $("#aTitle").textContent = "الدرس " + AR(n) + (l.missing ? " · الصوت غير متوفر حالياً" : "");
+  if (l.missing) autoplay = false;
   renderLessons(); setFollow(true); show(l.from);
   if (autoplay) audio.play();
 }
@@ -364,7 +366,7 @@ function renderReview(){
   box.hidden = false;
   box.innerHTML = `
     <h2>مراجعة الدرس ${AR(l.n)}</h2>
-    <div class="sub">من صفحة ${AR(bookNo(l.from))} إلى صفحة ${AR(bookNo(l.to))} · مدة الدرس ${fmt(l.dur)}</div>
+    <div class="sub">من صفحة ${AR(bookNo(l.from))} إلى صفحة ${AR(bookNo(l.to))}${l.missing ? "" : " · مدة الدرس " + fmt(l.dur)}</div>
     <h3>مرجع الصفحات</h3>
     <div class="refs">${(refs.length ? refs : [{t: sectionOf(l.from), p: l.from}]).map(t => `<button data-p="${t.p}">${t.t} · ص ${AR(bookNo(t.p))}</button>`).join("")}</div>
     ${r.points ? `<h3>أهم ما في الدرس</h3><ul class="pts">${r.points.map(p => `<li>${p}</li>`).join("")}</ul>` : ""}
